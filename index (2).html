@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PHO WALL AI v5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f7;--bg3:#f0f0f2;--bg4:#e8e8ec;
+  --red:#e63946;--red2:#ff4757;--gold:#d97706;--gold2:#f59e0b;
+  --cyan:#0284c7;--green:#059669;--pink:#db2777;
+  --text:#111827;--text2:#374151;--text3:#6b7280;
+  --border:#d1d5db;--border2:#9ca3af;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:12px;min-height:100vh;overflow-x:hidden}
+
+/* ===== HEADER ===== */
+#header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:28px;height:28px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo-text{font-family:var(--mono);font-weight:700;font-size:16px;letter-spacing:2px;color:var(--text)}
+.logo-text span{color:var(--red)}
+.header-right{display:flex;align-items:center;gap:16px}
+.market-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 2s infinite}
+.status-dot.open{background:var(--green)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.clock{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:1px}
+.version-badge{font-family:var(--mono);font-size:9px;background:var(--red);color:#fff;padding:2px 6px;border-radius:3px;letter-spacing:1px}
+
+/* ===== NAV ICONS ===== */
+#nav{
+  display:flex;align-items:center;gap:4px;padding:8px 16px;
+  background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 18px;border-radius:8px;cursor:pointer;border:none;
+  background:transparent;color:var(--text2);transition:all .2s;min-width:auto;
+}
+.nav-btn:hover{background:var(--bg4);color:var(--text)}
+.nav-btn.active{background:linear-gradient(135deg,rgba(230,57,70,.12),rgba(217,119,6,.08));color:var(--red);border:1px solid rgba(230,57,70,.3)}
+.nav-icon{font-size:24px;line-height:1}
+.nav-label{font-size:20px;font-family:var(--mono);letter-spacing:.5px;white-space:nowrap}
+.nav-new{position:relative}
+.nav-new::after{content:'NEW';position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:7px;padding:1px 3px;border-radius:2px;font-family:var(--mono)}
+
+/* ===== MAIN ===== */
+#main{max-width:1400px;margin:0 auto;padding:20px}
+
+/* ===== TAB PAGES ===== */
+.tab-page{display:none}
+.tab-page.active{display:block}
+
+/* ===== PAGE HEADER ===== */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.page-title{display:flex;align-items:center;gap:10px}
+.page-title-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;background:linear-gradient(135deg,var(--red),var(--gold))}
+.page-title h1{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text)}
+.page-title p{font-size:12px;color:var(--text3);margin-top:2px}
+.page-actions{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 16px;border-radius:6px;border:none;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.5px;transition:all .2s}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:var(--red2)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--text2)}
+.btn-ai{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff}
+.btn-ai:hover{opacity:.9}
+
+/* ===== CARDS ===== */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card-title{font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* ===== STAT BOXES ===== */
+.stat-box{background:var(--bg3);border-radius:8px;padding:14px 16px;border:1px solid var(--border)}
+.stat-label{font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-value{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text)}
+.stat-value.red{color:var(--red)}
+.stat-value.gold{color:var(--gold)}
+.stat-value.cyan{color:var(--cyan)}
+.stat-value.green{color:var(--green)}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+
+/* ===== GEX CHART ===== */
+.gex-chart-wrap{position:relative;background:var(--bg3);border-radius:8px;padding:16px}
+.gex-strike-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.gex-strike-label{font-family:var(--mono);font-size:11px;color:var(--text2);width:46px;text-align:right;flex-shrink:0}
+.gex-strike-label.flip{color:var(--gold);font-weight:700}
+.gex-bars{flex:1;display:flex;align-items:center;gap:2px;height:18px;position:relative}
+.gex-bar-put{height:100%;background:var(--pink);border-radius:2px 0 0 2px;transition:width .5s}
+.gex-bar-call{height:100%;background:var(--cyan);border-radius:0 2px 2px 0;transition:width .5s}
+.gex-flip-line{width:2px;height:22px;background:var(--gold);position:absolute;left:50%;transform:translateX(-50%)}
+.gex-values{font-family:var(--mono);font-size:9px;white-space:nowrap;color:var(--text3)}
+.gex-legend{display:flex;gap:16px;margin-top:12px;justify-content:center}
+.gex-leg-item{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--text2)}
+.gex-leg-dot{width:10px;height:10px;border-radius:2px}
+
+/* ===== GEX INTERPRETATION ===== */
+.gex-interpret{background:var(--bg3);border-radius:8px;padding:14px;border-left:3px solid var(--red)}
+.gex-interpret-item{margin-bottom:10px}
+.gex-interpret-item:last-child{margin-bottom:0}
+.gex-interpret-label{font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:3px}
+.gex-interpret-label.red{color:var(--red)}
+.gex-interpret-label.gold{color:var(--gold)}
+.gex-interpret-label.pink{color:var(--pink)}
+.gex-interpret-label.green{color:var(--green)}
+.gex-interpret-desc{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* ===== AI ANALYSIS BOX ===== */
+.ai-box{background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(79,70,229,.03));border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:16px}
+.ai-box-title{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-family:var(--mono);font-size:12px;font-weight:700;color:#6d28d9}
+.ai-box-actions{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.ai-response{font-size:13px;color:var(--text2);line-height:1.7;min-height:60px}
+.ai-response.loading::after{content:'';display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:#6d28d9;border-radius:50%;animation:spin .8s linear infinite;margin-left:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.thinking{font-family:var(--mono);font-size:11px;color:#6d28d9;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ===== SECTOR TABLE ===== */
+.sector-table{width:100%;border-collapse:collapse}
+.sector-table th{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.sector-table td{padding:9px 10px;border-bottom:1px solid var(--border);font-size:13px}
+.sector-table tr:last-child td{border:none}
+.sector-table tr:hover td{background:rgba(0,0,0,.03)}
+.flow-bar-wrap{width:120px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.flow-bar{height:100%;border-radius:3px;transition:width .5s}
+.flow-bar.in{background:var(--green)}
+.flow-bar.out{background:var(--red)}
+.badge{padding:2px 8px;border-radius:3px;font-family:var(--mono);font-size:10px;font-weight:700}
+.badge.strong-in{background:rgba(6,214,160,.2);color:var(--green);border:1px solid rgba(6,214,160,.4)}
+.badge.in{background:rgba(6,214,160,.1);color:var(--green)}
+.badge.out{background:rgba(230,57,70,.1);color:var(--red)}
+.badge.strong-out{background:rgba(230,57,70,.2);color:var(--red);border:1px solid rgba(230,57,70,.4)}
+.badge.neutral{background:rgba(148,163,184,.1);color:var(--text2)}
+.pct.pos{color:var(--green)}
+.pct.neg{color:var(--red)}
+
+/* ===== BREADTH GAUGE ===== */
+.gauge-wrap{position:relative;text-align:center}
+.gauge-label{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px}
+.gauge-value{font-family:var(--mono);font-size:16px;font-weight:700;margin-top:2px}
+
+/* ===== HEATMAP ===== */
+.heatmap-grid{display:grid;gap:4px}
+.hm-cell{border-radius:4px;padding:6px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.hm-cell:hover{opacity:.8;transform:scale(1.02)}
+.hm-ticker{font-family:var(--mono);font-weight:700;font-size:11px;color:#fff}
+.hm-pct{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.8)}
+
+/* ===== EARNINGS ===== */
+.earnings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);transition:background .15s}
+.earnings-row:hover{background:rgba(0,0,0,.02)}
+.earn-ticker{font-family:var(--mono);font-weight:700;font-size:14px}
+.earn-date{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.earn-when{font-size:11px;font-family:var(--mono)}
+.earn-when.bmo{color:var(--gold)}
+.earn-when.amc{color:var(--cyan)}
+.earn-eps{font-family:var(--mono);font-size:11px}
+.earn-eps .est{color:var(--text2)}
+.earn-eps .actual{color:var(--green)}
+.earn-eps .miss{color:var(--red)}
+
+/* ===== NEWS ===== */
+.news-card{background:var(--bg2);border-radius:8px;padding:14px;border-left:3px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.news-card:hover{border-left-color:var(--red);background:rgba(230,57,70,.03)}
+.news-card.open{border-left-color:var(--gold)}
+.news-cat{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:6px}
+.news-title{font-size:14px;font-weight:600;line-height:1.4;color:var(--text);margin-bottom:6px}
+.news-meta{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.news-impact{padding:2px 7px;border-radius:3px;font-size:9px;font-weight:700;font-family:var(--mono)}
+.impact-high{background:rgba(230,57,70,.2);color:var(--red);border:1px solid rgba(230,57,70,.4)}
+.impact-med{background:rgba(244,162,97,.2);color:var(--gold);border:1px solid rgba(244,162,97,.4)}
+.impact-low{background:rgba(148,163,184,.1);color:var(--text2)}
+.expert-article{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.expert-article.open{display:block}
+.expert-section{margin-bottom:14px}
+.expert-section-title{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.expert-section-body{font-size:13px;color:var(--text2);line-height:1.6}
+.stock-impact-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)}
+.stock-impact-row:last-child{border:none}
+.si-ticker{font-family:var(--mono);font-weight:700;font-size:13px}
+.si-dir{font-family:var(--mono);font-size:11px;font-weight:700}
+.si-dir.up{color:var(--green)}
+.si-dir.down{color:var(--red)}
+.si-reason{font-size:12px;color:var(--text3);flex:1;margin:0 12px}
+
+/* ===== SCREENER ===== */
+.screener-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filter-select{background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;font-family:var(--mono);font-size:11px;cursor:pointer}
+.filter-select:focus{outline:none;border-color:var(--red)}
+.screener-table{width:100%;border-collapse:collapse}
+.screener-table th{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);cursor:pointer}
+.screener-table th:first-child{text-align:left}
+.screener-table th:hover{color:var(--text)}
+.screener-table td{padding:8px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;text-align:right}
+.screener-table td:first-child{text-align:left}
+.screener-table tr:hover td{background:rgba(0,0,0,.02)}
+.s-ticker{font-weight:700;font-size:13px;color:var(--text)}
+.s-name{font-size:10px;color:var(--text3);font-family:var(--sans)}
+.rs-bar{display:inline-block;width:40px;height:5px;background:var(--bg);border-radius:2px;vertical-align:middle;overflow:hidden}
+.rs-fill{height:100%;border-radius:2px;background:var(--green)}
+
+/* ===== RRG ===== */
+.rrg-canvas-wrap{position:relative;background:var(--bg3);border-radius:8px;overflow:hidden}
+.rrg-quadrant{position:absolute;font-family:var(--mono);font-size:10px;opacity:.3;pointer-events:none}
+
+/* ===== RESEARCH ===== */
+.research-input-wrap{background:var(--bg2);border-radius:10px;padding:16px;border:1px solid var(--border)}
+.research-textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:12px;font-family:var(--mono);font-size:12px;resize:vertical;min-height:80px}
+.research-textarea:focus{outline:none;border-color:var(--red)}
+.research-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.preset-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);padding:5px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s}
+.preset-btn:hover{color:var(--red);border-color:var(--red)}
+.research-result{background:var(--bg2);border-radius:10px;padding:16px;margin-top:16px;border:1px solid var(--border);min-height:200px;font-size:12px;color:var(--text2);line-height:1.8}
+.research-result h3{font-family:var(--mono);font-size:13px;color:var(--gold);margin:14px 0 6px}
+.research-result h3:first-child{margin-top:0}
+.research-result ul{padding-left:20px;margin:6px 0}
+.research-result li{margin-bottom:4px}
+.research-result strong{color:var(--text)}
+.research-result .bull{color:var(--green)}
+.research-result .bear{color:var(--red)}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr}
+  #main{padding:12px}
+  .nav-btn{min-width:auto;padding:8px 12px}
+  .nav-label{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div class="logo">
+    <div class="logo-icon">&#x1F4C8;</div>
+    <div>
+      <div class="logo-text">PH&#x1ED0; WALL <span>AI</span></div>
+    </div>
+    <span class="version-badge">v5</span>
+  </div>
+  <div class="header-right">
+    <div class="market-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">CLOSED</span>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div id="nav">
+  <button class="nav-btn active" onclick="switchTab('cashflow',this)">
+    <div class="nav-icon">&#x1F30A;</div>
+    <div class="nav-label">US Cash Flow</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('internals',this)">
+    <div class="nav-icon">&#x1F4CA;</div>
+    <div class="nav-label">Internals</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('screener',this)">
+    <div class="nav-icon">&#x1F50D;</div>
+    <div class="nav-label">Screener</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('earnings',this)">
+    <div class="nav-icon">&#x1F4C5;</div>
+    <div class="nav-label">Earnings</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('heatmap',this)">
+    <div class="nav-icon">&#x1F5FA;</div>
+    <div class="nav-label">Heatmap</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('rrg',this)">
+    <div class="nav-icon">&#x1F504;</div>
+    <div class="nav-label">RRG</div>
+  </button>
+  <button class="nav-btn nav-new" onclick="switchTab('gex',this)">
+    <div class="nav-icon">&#x1F9E0;</div>
+    <div class="nav-label">GEX</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('tinnong',this)">
+    <div class="nav-icon">&#x1F525;</div>
+    <div class="nav-label">Tin N&#xF3;ng</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('research',this)">
+    <div class="nav-icon">&#x1F916;</div>
+    <div class="nav-label">Nghi&#xEA;n C&#x1EE9;u AI</div>
+  </button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+<!-- ===== TAB: US CASH FLOW ===== -->
+<div class="tab-page active" id="tab-cashflow">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F30A;</div>
+      <div>
+        <h1>US CASH FLOW</h1>
+        <p>D&#xF2;ng ti&#x1EC1;n qu&#x1EF9; &#x0111;&#x1EA7;u t&#x01B0; &amp; ETF theo sector</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ghost" onclick="refreshCashflow()">&#x21BB; Refresh</button>
+      <button class="btn btn-primary" onclick="aiAnalyzeCashflow()">&#x1F916; AI Ph&#xE2;n T&#xED;ch</button>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="stat-box">
+      <div class="stat-label">SPY Flow (7D)</div>
+      <div class="stat-value green">+$4.2B</div>
+      <div class="stat-sub">&#x25B2; INFLOW STRONG</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">QQQ Flow (7D)</div>
+      <div class="stat-value red">-$1.8B</div>
+      <div class="stat-sub">&#x25BC; ROTATION OUT TECH</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">IWM Flow (7D)</div>
+      <div class="stat-value green">+$2.1B</div>
+      <div class="stat-sub">&#x25B2; SMALL-CAP OUTPERFORM</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Dominant Sector</div>
+      <div class="stat-value gold" style="font-size:16px">ENERGY</div>
+      <div class="stat-sub">XLE +320% YoY flow</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Sector Flow Table -->
+    <div class="card">
+      <div class="card-title">&#x1F4B0; D&#xF2;ng Ti&#x1EC1;n Sector ETF (7 ng&#xE0;y)</div>
+      <table class="sector-table" id="cashflowTable">
+        <thead>
+          <tr>
+            <th>ETF / Sector</th>
+            <th>7D Flow</th>
+            <th>Bar</th>
+            <th>Signal</th>
+            <th>% Ch&#x1EE7;</th>
+          </tr>
+        </thead>
+        <tbody id="cashflowBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Rotation Chart -->
+    <div class="card">
+      <div class="card-title">&#x1F504; Rotation Heatmap</div>
+      <canvas id="rotationChart" height="300"></canvas>
+      <div style="margin-top:14px">
+        <div class="ai-box">
+          <div class="ai-box-title">&#x1F916; AI Rotation Analysis</div>
+          <div class="ai-response" id="cashflowAI">Click "AI Ph&#xE2;n T&#xED;ch" &#x111;&#x1EC3; nh&#x1EAD;n ph&#xE2;n t&#xED;ch d&#xF2;ng ti&#x1EC1;n t&#x1EEB; Claude AI...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: MARKET INTERNALS ===== -->
+<div class="tab-page" id="tab-internals">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F4CA;</div>
+      <div>
+        <h1>MARKET INTERNALS</h1>
+        <p>Breadth, Sentiment &amp; Options Flow</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-primary" onclick="aiAnalyzeInternals()">&#x1F916; AI Ph&#xE2;n T&#xED;ch</button>
+    </div>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="stat-box">
+      <div class="stat-label">VIX</div>
+      <div class="stat-value red">18.4</div>
+      <div class="stat-sub">ELEVATED / CAUTION</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Put/Call Ratio</div>
+      <div class="stat-value gold">0.72</div>
+      <div class="stat-sub">NEUTRAL SENTIMENT</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">NYSE TICK</div>
+      <div class="stat-value green">+847</div>
+      <div class="stat-sub">BUYERS IN CONTROL</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">A/D Line</div>
+      <div class="stat-value green">+1,243</div>
+      <div class="stat-sub">STRONG BREADTH</div>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:16px">
+    <div class="stat-box">
+      <div class="stat-label">% Stocks > MA50</div>
+      <div class="stat-value gold">62%</div>
+      <div class="stat-sub" style="margin-top:8px">
+        <div style="background:var(--bg);border-radius:4px;height:6px;overflow:hidden">
+          <div style="width:62%;height:100%;background:var(--gold);border-radius:4px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">% Stocks > MA200</div>
+      <div class="stat-value green">71%</div>
+      <div class="stat-sub" style="margin-top:8px">
+        <div style="background:var(--bg);border-radius:4px;height:6px;overflow:hidden">
+          <div style="width:71%;height:100%;background:var(--green);border-radius:4px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Fear &amp; Greed</div>
+      <div class="stat-value gold">58</div>
+      <div class="stat-sub">GREED ZONE</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">&#x1F4C8; VIX Term Structure</div>
+      <canvas id="vixChart" height="220"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title">&#x1F4CA; Put/Call Ratio (20D)</div>
+      <canvas id="pcChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <div style="margin-top:14px">
+    <div class="ai-box">
+      <div class="ai-box-title">&#x1F916; AI Market Internals Analysis</div>
+      <div class="ai-response" id="internalsAI">Click "AI Ph&#xE2;n T&#xED;ch" &#x111;&#x1EC3; nh&#x1EAD;n ph&#xE2;n t&#xED;ch Market Internals...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: SCREENER ===== -->
+<div class="tab-page" id="tab-screener">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F50D;</div>
+      <div>
+        <h1>STOCK SCREENER</h1>
+        <p>L&#x1ECB;c c&#x1ED5; theo &#x111;i&#x1EC1;u ki&#x1EC7;n k&#x1EF9; thu&#x1EAD;t &amp; c&#x01A1; b&#x1EA3;n</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-primary" onclick="runScreener()">&#x25B6; Run Screen</button>
+    </div>
+  </div>
+
+  <div class="screener-filters">
+    <select class="filter-select" id="sectorFilter">
+      <option value="">All Sectors</option>
+      <option>Technology</option><option>Energy</option><option>Financials</option>
+      <option>Healthcare</option><option>Industrials</option><option>Consumer Disc.</option>
+    </select>
+    <select class="filter-select" id="mktcapFilter">
+      <option value="">All Market Cap</option>
+      <option>Mega-Cap (&gt;$200B)</option><option>Large-Cap ($10B+)</option>
+      <option>Mid-Cap ($2B-$10B)</option><option>Small-Cap (&lt;$2B)</option>
+      <option>Micro-Cap (&lt;$300M)</option>
+    </select>
+    <select class="filter-select" id="rsFilter">
+      <option value="">RS Rating</option>
+      <option>RS &gt; 90</option><option>RS &gt; 80</option><option>RS &gt; 70</option>
+    </select>
+    <select class="filter-select" id="setupFilter">
+      <option value="">All Setups</option>
+      <option>Breakout</option><option>Pullback to MA</option><option>Base Building</option>
+      <option>Momentum</option><option>Earnings Play</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <table class="screener-table">
+      <thead>
+        <tr>
+          <th>TICKER</th><th>PRICE</th><th>CHG%</th><th>VOL</th>
+          <th>MKT CAP</th><th>RS</th><th>SETUP</th><th>SECTOR</th>
+        </tr>
+      </thead>
+      <tbody id="screenerBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== TAB: EARNINGS ===== -->
+<div class="tab-page" id="tab-earnings">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F4C5;</div>
+      <div>
+        <h1>EARNINGS CALENDAR</h1>
+        <p>L&#x1ECB;ch b&#xE1;o c&#xE1;o k&#x1EBF;t qu&#x1EA3; kinh doanh t&#x1EEB; nay &rarr; 2 tu&#x1EA7;n</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ai" onclick="aiEarnings()">&#x1F916; AI Earnings Pick</button>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:16px">
+    <div class="stat-box">
+      <div class="stat-label">Tu&#x1EA7;n N&#xE0;y (B&#xE1;o C&#xE1;o)</div>
+      <div class="stat-value gold">47</div>
+      <div class="stat-sub">companies reporting</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Beat Rate (Q2'26)</div>
+      <div class="stat-value green">73%</div>
+      <div class="stat-sub">above estimate</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Avg EPS Surprise</div>
+      <div class="stat-value green">+4.2%</div>
+      <div class="stat-sub">vs consensus</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="earningsContainer"></div>
+  </div>
+
+  <div style="margin-top:14px">
+    <div class="ai-box">
+      <div class="ai-box-title">&#x1F916; AI Earnings Strategy</div>
+      <div class="ai-response" id="earningsAI">Click "AI Earnings Pick" &#x111;&#x1EC3; nh&#x1EAD;n g&#x1EE3;i &#xFD; c&#x1EED; play earnings...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: HEATMAP ===== -->
+<div class="tab-page" id="tab-heatmap">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F5FA;</div>
+      <div>
+        <h1>S&P 500 HEATMAP</h1>
+        <p>Hi&#x1EC7;u su&#x1EA5;t c&#x1ED5; phi&#x1EBF;u theo sector h&#xF4;m nay</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <select class="filter-select" id="hmPeriod" onchange="buildHeatmap()">
+        <option value="1d">Today</option>
+        <option value="5d">5 Days</option>
+        <option value="1m">1 Month</option>
+        <option value="ytd">YTD</option>
+      </select>
+    </div>
+  </div>
+  <div id="heatmapContainer" style="display:flex;flex-direction:column;gap:6px"></div>
+</div>
+
+<!-- ===== TAB: RRG ===== -->
+<div class="tab-page" id="tab-rrg">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F504;</div>
+      <div>
+        <h1>RELATIVE ROTATION GRAPH</h1>
+        <p>X&#xE1;c &#x111;&#x1ECB;nh giai &#x111;o&#x1EA1;n c&#x1EE7;a t&#x1EEB;ng sector vs SPY</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ai" onclick="aiRRG()">&#x1F916; AI RRG Ph&#xE2;n T&#xED;ch</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">&#x1F504; RRG Chart (vs SPY)</div>
+      <div class="rrg-canvas-wrap">
+        <canvas id="rrgCanvas" width="500" height="500"></canvas>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">&#x1F4CB; RRG Quadrant Summary</div>
+        <div id="rrgSummary"></div>
+      </div>
+      <div class="ai-box">
+        <div class="ai-box-title">&#x1F916; AI RRG Ph&#xE2;n T&#xED;ch</div>
+        <div class="ai-response" id="rrgAI">Click "AI RRG Ph&#xE2;n T&#xED;ch" &#x111;&#x1EC3; nh&#x1EAD;n chi&#x1EBF;n l&#x01B0;&#x1EE3;c rotation...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: GEX ===== -->
+<div class="tab-page" id="tab-gex">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F9E0;</div>
+      <div>
+        <h1>GEX &mdash; GAMMA EXPOSURE</h1>
+        <p>Options Flow &amp; Market Maker Positioning</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ghost" onclick="refreshGEX()">&#x21BB; Refresh</button>
+      <button class="btn btn-ai" onclick="aiGEXExplain()">&#x1F4D6; Gi&#x1EA3;i Th&#xED;ch GEX</button>
+      <button class="btn btn-primary" onclick="aiGEXSetup()">&#x26A1; Trade Setup</button>
+    </div>
+  </div>
+
+  <!-- GEX Key Levels -->
+  <div class="grid-3" style="margin-bottom:16px">
+    <div class="stat-box" style="border-color:rgba(0,212,255,.3)">
+      <div class="stat-label">&#x1F300; Gamma Flip</div>
+      <div class="stat-value cyan">$5,850</div>
+      <div class="stat-sub">V&#xF9;ng chuy&#x1EC3;n ti&#x1EBF;p key</div>
+    </div>
+    <div class="stat-box" style="border-color:rgba(0,212,255,.2)">
+      <div class="stat-label">&#x1F4DE; Call Wall</div>
+      <div class="stat-value cyan">$6,000</div>
+      <div class="stat-sub">Kh&#xE1;ng c&#x1EF1; ng&#x1EAF;n h&#x1EA1;n</div>
+    </div>
+    <div class="stat-box" style="border-color:rgba(255,0,110,.3)">
+      <div class="stat-label">&#x1F6E1; Put Wall</div>
+      <div class="stat-value red">$5,750</div>
+      <div class="stat-sub">S&#xE0;n &#x111;&#x1EE1; m&#x1EA1;nh</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:14px">
+    <!-- GEX Bar Chart -->
+    <div class="card">
+      <div class="card-title">&#x1F4CA; GEX by Strike ($B) &mdash; S&P 500</div>
+      <div class="gex-chart-wrap" id="gexBars"></div>
+      <div class="gex-legend" style="margin-top:12px">
+        <div class="gex-leg-item"><div class="gex-leg-dot" style="background:var(--pink)"></div>PUT GEX</div>
+        <div class="gex-leg-item"><div class="gex-leg-dot" style="background:var(--cyan)"></div>CALL GEX</div>
+        <div class="gex-leg-item"><div class="gex-leg-dot" style="background:var(--gold)"></div>FLIP</div>
+      </div>
+    </div>
+
+    <!-- GEX Interpretation -->
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">&#x1F4D1; DI&#x1EC4;N GI&#x1EA2;I GEX</div>
+        <div class="gex-interpret">
+          <div class="gex-interpret-item">
+            <div class="gex-interpret-label cyan">Gamma Flip $5,850</div>
+            <div class="gex-interpret-desc">V&#xF9;ng chuy&#x1EC3;n ti&#x1EBF;p &mdash; tr&#xEA;n: Market Maker &#x111;&#x1EE1; gi&#xE1;, d&#x01B0;&#x1EDB;i: amplify move</div>
+          </div>
+          <div class="gex-interpret-item">
+            <div class="gex-interpret-label cyan">Call Wall $6,000</div>
+            <div class="gex-interpret-desc">Kh&#xE1;ng c&#x1EF1; ng&#x1EAF;n h&#x1EA1;n &mdash; Market Maker b&#xE1;n call &#x1EDF; &#x111;&#xE2;y</div>
+          </div>
+          <div class="gex-interpret-item">
+            <div class="gex-interpret-label pink">Put Wall $5,750</div>
+            <div class="gex-interpret-desc">S&#xE0;n &#x111;&#x1EE1; m&#x1EA1;nh &mdash; t&#x1ED5; ch&#x1EE9;c hedge b&#x1EA3;o v&#x1EC7; v&#xF9;ng n&#xE0;y</div>
+          </div>
+          <div class="gex-interpret-item">
+            <div class="gex-interpret-label green">Net GEX D&#x01B0;&#x01A1;ng</div>
+            <div class="gex-interpret-desc">&gt;$5,850: bi&#x1EBF;n &#x111;&#x1ED9;ng th&#x1EA5;p, dip buying. &lt;$5,850: volatility t&#x0103;ng m&#x1EA1;nh</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Net GEX Chart -->
+      <div class="card">
+        <div class="card-title">&#x1F4C8; Net GEX (20D History)</div>
+        <canvas id="netGexChart" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Analysis -->
+  <div class="ai-box">
+    <div class="ai-box-title">&#x1F916; AI PH&#xC2;N T&#xCD;CH GEX</div>
+    <div class="ai-box-actions">
+      <button class="btn btn-ghost" onclick="aiGEXExplain()">&#x1F4D6; Gi&#x1EA3;i th&#xED;ch GEX v&#xE0; chi&#x1EBF;n l&#x01B0;&#x1EE3;c</button>
+      <button class="btn btn-primary" onclick="aiGEXSetup()">&#x26A1; Trade setup t&#x1EEB; GEX hi&#x1EC7;n t&#x1EA1;i</button>
+      <button class="btn btn-ai" onclick="aiPortfolioQ3()">&#x1F4B0; Ph&#xE2;n b&#x1ED5; Q3/2026</button>
+    </div>
+    <div class="ai-response" id="gexAI">Ch&#x1ECD;n c&#xE2;u h&#x1ECF;i &#x111;&#x1EC3; nh&#x1EAD;n ph&#xE2;n t&#xED;ch t&#x1EEB; Claude AI...</div>
+  </div>
+</div>
+
+<!-- ===== TAB: TIN NONG ===== -->
+<div class="tab-page" id="tab-tinnong">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F525;</div>
+      <div>
+        <h1>TIN N&#xD3;NG</h1>
+        <p>T&#x1ED5;ng h&#x1EE3;p tin t&#x1EE9;c t&#x1EEB; Yahoo Finance, MarketWatch, Reuters</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <select class="filter-select" id="newsFilter" onchange="filterNews()">
+        <option value="ALL">T&#x1EA5;t c&#x1EA3;</option>
+        <option value="MACRO">Macro</option>
+        <option value="EARNINGS">Earnings</option>
+        <option value="SECTOR">Sector</option>
+        <option value="CRYPTO">Crypto</option>
+      </select>
+      <button class="btn btn-ghost" onclick="loadNews()">&#x21BB; Refresh</button>
+    </div>
+  </div>
+  <div id="newsContainer"></div>
+</div>
+
+<!-- ===== TAB: NGHIEN CUU AI ===== -->
+<div class="tab-page" id="tab-research">
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title-icon">&#x1F916;</div>
+      <div>
+        <h1>NGHI&#xCA;N C&#x1EE8;U AI</h1>
+        <p>Ph&#xE2;n t&#xED;ch s&#xE2;u b&#x1EB1;ng Claude AI &mdash; CFA/CFP Level</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="research-input-wrap">
+    <div style="margin-bottom:8px;font-family:var(--mono);font-size:11px;color:var(--text3)">NH&#x1EAD;P C&#xC2;U H&#x1EEE;I NGHI&#xCA;N C&#x1EE8;U:</div>
+    <textarea class="research-textarea" id="researchInput" placeholder="V&#xED; d&#x1EE5;: Ph&#xE2;n t&#xED;ch NVDA tr&#x01B0;&#x1EDB;c k&#x1EBF;t qu&#x1EA3; Q2 2026. Sector rotation Energy vs Tech Q3. C&#x1ED5; phi&#x1EBF;u micro-cap ti&#x1EC1;m n&#x0103;ng nh&#x1EA5;t b&#xE2;y gi&#x1EDD;..."></textarea>
+    <div class="research-presets">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);align-self:center">PRESET:</span>
+      <button class="preset-btn" onclick="setResearchPreset('macro')">&#x1F30E; Macro Q3 Outlook</button>
+      <button class="preset-btn" onclick="setResearchPreset('rotation')">&#x1F504; Sector Rotation</button>
+      <button class="preset-btn" onclick="setResearchPreset('microcap')">&#x1F4C8; Micro-Cap Picks</button>
+      <button class="preset-btn" onclick="setResearchPreset('gex_strategy')">&#x1F9E0; GEX Strategy</button>
+      <button class="preset-btn" onclick="setResearchPreset('portfolio')">&#x1F4B0; Portfolio Review</button>
+    </div>
+    <div style="margin-top:12px;display:flex;justify-content:flex-end">
+      <button class="btn btn-ai" onclick="runResearch()" style="padding:10px 24px;font-size:12px">&#x1F916; Ph&#xE2;n T&#xED;ch S&#xE2;u</button>
+    </div>
+  </div>
+
+  <div class="research-result" id="researchResult">
+    <div style="color:var(--text3);font-family:var(--mono);font-size:12px;text-align:center;padding:40px 0">
+      &#x1F916; S&#x1EB5;n s&#xE0;ng ph&#xE2;n t&#xED;ch. Nh&#x1EAD;p c&#xE2;u h&#x1ECF;i ho&#x1EB7;c ch&#x1ECD;n preset &#x1EDF; tr&#xEA;n...
+    </div>
+  </div>
+</div>
+
+</div><!-- #main -->
+
+<script>
+// ============================================================
+// ANTHROPIC API CALL
+// ============================================================
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+async function callClaude(prompt, systemPrompt) {
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt || "Ban la chuyen gia phan tich thi truong chung khoan My. Tra loi bang tieng Viet, suc tich, chinh xac, co cau truc ro rang.",
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const textBlock = data.content.find(b => b.type === "text");
+    return textBlock ? textBlock.text : "Khong co phan hoi.";
+  } catch(e) {
+    return "Loi API: " + e.message + ". Vui long thu lai.";
+  }
+}
+
+async function streamToElement(elId, prompt, systemPrompt) {
+  const el = document.getElementById(elId);
+  el.classList.add("loading");
+  el.innerHTML = '<span class="thinking">Claude dang phan tich...</span>';
+  const result = await callClaude(prompt, systemPrompt);
+  el.classList.remove("loading");
+  el.innerHTML = result.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/## (.*)/g, "<h3>$1</h3>");
+}
+
+// ============================================================
+// CLOCK & MARKET STATUS
+// ============================================================
+function updateClock() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString("en-US", {timeZone:"America/New_York"}));
+  const h = et.getHours(), m = et.getMinutes(), s = et.getSeconds();
+  const isOpen = (h > 9 || (h === 9 && m >= 30)) && h < 16 && et.getDay() > 0 && et.getDay() < 6;
+  document.getElementById("clock").textContent =
+    `ET ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  document.getElementById("statusText").textContent = isOpen ? "OPEN" : "CLOSED";
+  const dot = document.getElementById("statusDot");
+  dot.className = "status-dot" + (isOpen ? " open" : "");
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(name, btn) {
+  document.querySelectorAll(".tab-page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  btn.classList.add("active");
+  // Lazy init charts
+  if (name === "cashflow" && !window._cashflowInit) initCashflow();
+  if (name === "internals" && !window._internalsInit) initInternals();
+  if (name === "screener" && !window._screenerInit) initScreener();
+  if (name === "earnings" && !window._earningsInit) initEarnings();
+  if (name === "heatmap" && !window._heatmapInit) buildHeatmap();
+  if (name === "rrg" && !window._rrgInit) initRRG();
+  if (name === "gex" && !window._gexInit) initGEX();
+  if (name === "tinnong" && !window._newsInit) loadNews();
+}
+
+// ============================================================
+// CASHFLOW TAB
+// ============================================================
+const SECTOR_DATA = [
+  {etf:"XLE",name:"Energy",flow:3.8,pct:2.1,signal:"strong-in"},
+  {etf:"XLI",name:"Industrials",flow:2.4,pct:1.4,signal:"in"},
+  {etf:"XLF",name:"Financials",flow:1.9,pct:0.8,signal:"in"},
+  {etf:"XLV",name:"Healthcare",flow:0.7,pct:0.3,signal:"neutral"},
+  {etf:"XLU",name:"Utilities",flow:0.4,pct:0.5,signal:"neutral"},
+  {etf:"XLRE",name:"Real Estate",flow:-0.3,pct:-0.4,signal:"out"},
+  {etf:"XLB",name:"Materials",flow:-0.8,pct:-0.6,signal:"out"},
+  {etf:"XLC",name:"Comm Svcs",flow:-1.2,pct:-0.9,signal:"out"},
+  {etf:"XLY",name:"Cons. Disc.",flow:-1.6,pct:-1.1,signal:"out"},
+  {etf:"XLK",name:"Technology",flow:-2.3,pct:-1.8,signal:"strong-out"},
+];
+
+function initCashflow() {
+  window._cashflowInit = true;
+  const maxFlow = Math.max(...SECTOR_DATA.map(d => Math.abs(d.flow)));
+  const tbody = document.getElementById("cashflowBody");
+  tbody.innerHTML = SECTOR_DATA.map(d => {
+    const barW = Math.round(Math.abs(d.flow) / maxFlow * 100);
+    const isIn = d.flow > 0;
+    const badgeClass = d.signal === "strong-in" ? "strong-in" : d.signal === "in" ? "in" : d.signal === "strong-out" ? "strong-out" : d.signal === "out" ? "out" : "neutral";
+    const badgeText = d.signal === "strong-in" ? "STRONG IN" : d.signal === "in" ? "INFLOW" : d.signal === "strong-out" ? "STRONG OUT" : d.signal === "out" ? "OUTFLOW" : "NEUTRAL";
+    return `<tr>
+      <td><span style="font-family:var(--mono);font-weight:700">${d.etf}</span> <span style="font-size:10px;color:var(--text3)">${d.name}</span></td>
+      <td style="font-family:var(--mono);color:${isIn?"var(--green)":"var(--red)"}">${isIn?"+":""}${d.flow}B</td>
+      <td><div class="flow-bar-wrap"><div class="flow-bar ${isIn?"in":"out"}" style="width:${barW}%"></div></div></td>
+      <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+      <td class="pct ${isIn?"pos":"neg"}">${isIn?"+":""}${d.pct}%</td>
+    </tr>`;
+  }).join("");
+
+  // Rotation bar chart
+  const ctx = document.getElementById("rotationChart").getContext("2d");
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: SECTOR_DATA.map(d => d.etf),
+      datasets: [{
+        label: "7D Flow ($B)",
+        data: SECTOR_DATA.map(d => d.flow),
+        backgroundColor: SECTOR_DATA.map(d => d.flow > 0 ? "rgba(6,214,160,0.7)" : "rgba(230,57,70,0.7)"),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: {display:false} },
+      scales: {
+        x: { ticks:{color:"#6b7280",font:{family:"JetBrains Mono",size:10}}, grid:{color:"#e5e7eb"} },
+        y: { ticks:{color:"#6b7280",font:{family:"JetBrains Mono",size:10}}, grid:{color:"#e5e7eb"} }
+      }
+    }
+  });
+}
+
+function refreshCashflow() {
+  document.getElementById("cashflowAI").innerHTML = "Refreshing...";
+  setTimeout(() => initCashflow(), 500);
+}
+
+async function aiAnalyzeCashflow() {
+  const prompt = `Phan tich dong tien sector thi truong My hien tai:
+- XLE (Energy): +3.8B inflow manh
+- XLI (Industrials): +2.4B inflow
+- XLF (Financials): +1.9B inflow  
+- XLK (Technology): -2.3B outflow manh
+- IWM Small-cap: +2.1B inflow
+SPY tong flow: +4.2B, QQQ: -1.8B
+
+Cho biet: 1) Xu huong rotation dang xay ra la gi? 2) Sector nao nen overweight Q3? 3) Risk can biet. Tra loi ngan gon, ro rang, bang tieng Viet.`;
+  await streamToElement("cashflowAI", prompt);
+}
+
+// ============================================================
+// MARKET INTERNALS
+// ============================================================
+function initInternals() {
+  window._internalsInit = true;
+  // VIX Term Structure
+  const vixCtx = document.getElementById("vixChart").getContext("2d");
+  new Chart(vixCtx, {
+    type: "line",
+    data: {
+      labels: ["VIX9D","VIX","VIX3M","VIX6M","VIX1Y"],
+      datasets: [{
+        label: "VIX Term",
+        data: [15.2, 18.4, 19.1, 20.3, 21.5],
+        borderColor: "#e63946",
+        backgroundColor: "rgba(230,57,70,0.1)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: "#e63946"
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { ticks:{color:"#6b7280",font:{size:10}}, grid:{color:"#e5e7eb"} },
+        y: { ticks:{color:"#6b7280",font:{size:10}}, grid:{color:"#e5e7eb"} }
+      }
+    }
+  });
+
+  // P/C Ratio chart
+  const pcCtx = document.getElementById("pcChart").getContext("2d");
+  const pcData = [0.85,0.78,0.82,0.75,0.71,0.68,0.72,0.74,0.70,0.72,0.69,0.72,0.74,0.76,0.73,0.71,0.72,0.70,0.69,0.72];
+  new Chart(pcCtx, {
+    type: "line",
+    data: {
+      labels: pcData.map((_,i) => `-${20-i}D`),
+      datasets: [{
+        label: "P/C Ratio",
+        data: pcData,
+        borderColor: "#f4a261",
+        backgroundColor: "rgba(244,162,97,0.1)",
+        fill: true, tension: 0.3, pointRadius: 2
+      },{
+        label: "Extreme Fear (>1.0)",
+        data: pcData.map(() => 1.0),
+        borderColor: "rgba(230,57,70,0.4)",
+        borderDash: [5,5], pointRadius: 0
+      },{
+        label: "Extreme Greed (<0.5)",
+        data: pcData.map(() => 0.5),
+        borderColor: "rgba(6,214,160,0.4)",
+        borderDash: [5,5], pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { ticks:{color:"#6b7280",font:{size:9}}, grid:{color:"#e5e7eb"} },
+        y: { ticks:{color:"#6b7280",font:{size:10}}, grid:{color:"#e5e7eb"}, min:0.4, max:1.1 }
+      }
+    }
+  });
+}
+
+async function aiAnalyzeInternals() {
+  const prompt = `Market Internals hien tai:
+- VIX: 18.4 (elevated, contango term structure)
+- Put/Call: 0.72 (neutral, khong extreme)
+- NYSE TICK: +847 (buyers control)
+- A/D Line: +1243 (breadth manh)
+- % stocks above MA50: 62%
+- % stocks above MA200: 71%
+- Fear & Greed: 58 (Greed zone)
+
+Danh gia tong the thi truong: bull hay bear trong ngan han? Rui ro co the xay ra? Chien luoc phu hop? Tra loi bang tieng Viet.`;
+  await streamToElement("internalsAI", prompt);
+}
+
+// ============================================================
+// SCREENER
+// ============================================================
+const SCREENER_STOCKS = [
+  {ticker:"SMCI",name:"Super Micro",price:412.5,chg:8.4,vol:"42M",mktcap:"24B",rs:95,setup:"Breakout",sector:"Technology"},
+  {ticker:"XOM",name:"ExxonMobil",price:118.3,chg:2.1,vol:"18M",mktcap:"471B",rs:88,setup:"Momentum",sector:"Energy"},
+  {ticker:"GEV",name:"GE Vernova",price:298.7,chg:3.8,vol:"8M",mktcap:"81B",rs:92,setup:"Base Building",sector:"Industrials"},
+  {ticker:"SLB",name:"SLB",price:42.8,chg:1.9,vol:"22M",mktcap:"58B",rs:82,setup:"Pullback to MA",sector:"Energy"},
+  {ticker:"JPM",name:"JP Morgan",price:215.4,chg:1.2,vol:"12M",mktcap:"612B",rs:79,setup:"Momentum",sector:"Financials"},
+  {ticker:"DUOL",name:"Duolingo",price:388.2,chg:5.7,vol:"4M",mktcap:"16B",rs:91,setup:"Breakout",sector:"Technology"},
+  {ticker:"CELH",name:"Celsius Hold.",price:32.6,chg:4.1,vol:"9M",mktcap:"7B",rs:85,setup:"Earnings Play",sector:"Consumer"},
+  {ticker:"PLTR",name:"Palantir",price:88.3,chg:2.9,vol:"35M",mktcap:"191B",rs:87,setup:"Momentum",sector:"Technology"},
+  {ticker:"OXY",name:"Occid. Petrol.",price:58.2,chg:1.6,vol:"14M",mktcap:"52B",rs:76,setup:"Pullback to MA",sector:"Energy"},
+  {ticker:"ASTS",name:"AST SpaceMobile",price:28.4,chg:6.2,vol:"18M",mktcap:"8B",rs:93,setup:"Breakout",sector:"Technology"},
+];
+
+function initScreener() {
+  window._screenerInit = true;
+  renderScreener(SCREENER_STOCKS);
+}
+
+function renderScreener(stocks) {
+  document.getElementById("screenerBody").innerHTML = stocks.map(s => `
+    <tr>
+      <td><div class="s-ticker">${s.ticker}</div><div class="s-name">${s.name}</div></td>
+      <td style="font-family:var(--mono);font-weight:700">$${s.price}</td>
+      <td class="pct ${s.chg>0?"pos":"neg"}" style="font-family:var(--mono)">${s.chg>0?"+":""}${s.chg}%</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${s.vol}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">$${s.mktcap}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:var(--mono);font-weight:700;color:${s.rs>=90?"var(--green)":s.rs>=80?"var(--gold)":"var(--text2)"}">${s.rs}</span>
+          <div class="rs-bar"><div class="rs-fill" style="width:${s.rs}%"></div></div>
+        </div>
+      </td>
+      <td><span class="badge ${s.setup==="Breakout"?"strong-in":s.setup==="Momentum"?"in":"neutral"}">${s.setup}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${s.sector}</td>
+    </tr>`).join("");
+}
+
+function runScreener() {
+  const sector = document.getElementById("sectorFilter").value;
+  const setup = document.getElementById("setupFilter").value;
+  let filtered = SCREENER_STOCKS;
+  if (sector) filtered = filtered.filter(s => s.sector.includes(sector.split(" ")[0]));
+  if (setup) filtered = filtered.filter(s => s.setup === setup);
+  renderScreener(filtered.length ? filtered : SCREENER_STOCKS);
+}
+
+// ============================================================
+// EARNINGS
+// ============================================================
+const EARNINGS_DATA = [
+  {ticker:"NVDA",date:"Jun 25",when:"AMC",epsEst:0.64,actual:null,sector:"Technology"},
+  {ticker:"MSFT",date:"Jun 25",when:"AMC",epsEst:2.98,actual:null,sector:"Technology"},
+  {ticker:"NKE",date:"Jun 26",when:"BMO",epsEst:0.71,actual:null,sector:"Consumer"},
+  {ticker:"MU",date:"Jun 26",when:"AMC",epsEst:1.58,actual:null,sector:"Technology"},
+  {ticker:"GIS",date:"Jun 24",when:"BMO",epsEst:1.04,actual:1.12,sector:"Consumer"},
+  {ticker:"WBA",date:"Jun 24",when:"BMO",epsEst:-0.38,actual:-0.48,sector:"Healthcare"},
+  {ticker:"CAG",date:"Jun 25",when:"BMO",epsEst:0.52,actual:0.55,sector:"Consumer"},
+  {ticker:"STZ",date:"Jun 27",when:"BMO",epsEst:3.21,actual:null,sector:"Consumer"},
+];
+
+function initEarnings() {
+  window._earningsInit = true;
+  const container = document.getElementById("earningsContainer");
+  
+  const upcoming = EARNINGS_DATA.filter(e => !e.actual);
+  const reported = EARNINGS_DATA.filter(e => e.actual);
+  
+  let html = '<div style="margin-bottom:8px;padding:6px 12px;font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">SAP BAO CAO</div>';
+  html += upcoming.map(e => `
+    <div class="earnings-row">
+      <div>
+        <div class="earn-ticker" style="color:var(--text)">${e.ticker}</div>
+        <div class="earn-date">${e.date}</div>
+      </div>
+      <span class="earn-when ${e.when.toLowerCase()}">${e.when === "AMC" ? "After Close" : "Before Open"}</span>
+      <div class="earn-eps"><span class="est">Est: $${e.epsEst}</span></div>
+      <span class="badge in">UPCOMING</span>
+    </div>`).join("");
+
+  html += '<div style="margin:12px 0 8px;padding:6px 12px;font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-top:1px solid var(--border)">DA BAO CAO</div>';
+  html += reported.map(e => {
+    const beat = e.actual > e.epsEst;
+    const diff = ((e.actual - e.epsEst) / Math.abs(e.epsEst) * 100).toFixed(1);
+    return `
+    <div class="earnings-row">
+      <div>
+        <div class="earn-ticker" style="color:var(--text)">${e.ticker}</div>
+        <div class="earn-date">${e.date}</div>
+      </div>
+      <span class="earn-when ${e.when.toLowerCase()}">${e.when === "AMC" ? "After Close" : "Before Open"}</span>
+      <div class="earn-eps">
+        <span class="est">Est: $${e.epsEst}</span>
+        <span class="${beat?"actual":"miss"}"> | Act: $${e.actual}</span>
+      </div>
+      <span class="badge ${beat?"strong-in":"strong-out"}">${beat?"BEAT +"+diff+"%":"MISS "+diff+"%"}</span>
+    </div>`;
+  }).join("");
+  container.innerHTML = html;
+}
+
+async function aiEarnings() {
+  const prompt = `Earnings season Q2 2026 upcoming reports:
+- NVDA (Jun 25 AMC): Est EPS $0.64 - GPU AI demand
+- MSFT (Jun 25 AMC): Est EPS $2.98 - Azure cloud
+- MU (Jun 26 AMC): Est EPS $1.58 - Memory recovery
+- NKE (Jun 26 BMO): Est EPS $0.71 - Consumer spending
+
+Da bao cao: GIS beat +7.7%, WBA miss -26%
+
+Goi y co phieu nao co the trade earnings play tot nhat? Chien luoc straddle vs directional? Risk management? Tra loi bang tieng Viet ngan gon.`;
+  await streamToElement("earningsAI", prompt);
+}
+
+// ============================================================
+// HEATMAP
+// ============================================================
+const HEATMAP_SECTORS = [
+  {name:"Energy",stocks:[
+    {t:"XOM",p:2.1},{t:"CVX",p:1.8},{t:"COP",p:2.4},{t:"OXY",p:1.6},{t:"SLB",p:1.9}]},
+  {name:"Technology",stocks:[
+    {t:"NVDA",p:3.2},{t:"AAPL",p:-0.4},{t:"MSFT",p:0.8},{t:"META",p:1.2},{t:"GOOGL",p:0.5},{t:"AMZN",p:-0.3}]},
+  {name:"Financials",stocks:[
+    {t:"JPM",p:1.2},{t:"BAC",p:0.9},{t:"GS",p:1.4},{t:"MS",p:0.8},{t:"V",p:0.6}]},
+  {name:"Industrials",stocks:[
+    {t:"GE",p:2.1},{t:"GEV",p:3.8},{t:"CAT",p:1.1},{t:"RTX",p:0.9},{t:"LMT",p:0.7}]},
+  {name:"Healthcare",stocks:[
+    {t:"JNJ",p:0.3},{t:"UNH",p:-1.2},{t:"PFE",p:-0.8},{t:"LLY",p:1.5},{t:"ABBV",p:0.4}]},
+  {name:"Consumer Disc",stocks:[
+    {t:"TSLA",p:-2.1},{t:"AMZN",p:-0.3},{t:"HD",p:0.7},{t:"NKE",p:-1.4},{t:"MCD",p:0.2}]},
+];
+
+function getHeatColor(pct) {
+  if (pct > 3) return "#064e3b";
+  if (pct > 2) return "#065f46";
+  if (pct > 1) return "#047857";
+  if (pct > 0.3) return "#059669";
+  if (pct > -0.3) return "#374151";
+  if (pct > -1) return "#7f1d1d";
+  if (pct > -2) return "#991b1b";
+  return "#7f1d1d";
+}
+
+function buildHeatmap() {
+  window._heatmapInit = true;
+  const container = document.getElementById("heatmapContainer");
+  container.innerHTML = HEATMAP_SECTORS.map(sector => {
+    const avgPct = (sector.stocks.reduce((a,s) => a + s.p, 0) / sector.stocks.length).toFixed(2);
+    const isPos = avgPct > 0;
+    return `
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text2);font-weight:600">${sector.name}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:${isPos?"var(--green)":"var(--red)"};font-weight:700">${isPos?"+":""}${avgPct}%</span>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${sector.stocks.map(s => `
+          <div class="hm-cell" style="background:${getHeatColor(s.p)};min-width:70px;flex:1"
+               title="${s.t}: ${s.p > 0 ? "+" : ""}${s.p}%">
+            <div class="hm-ticker">${s.t}</div>
+            <div class="hm-pct">${s.p > 0 ? "+" : ""}${s.p}%</div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ============================================================
+// RRG
+// ============================================================
+const RRG_SECTORS = [
+  {name:"XLE",rs:107.2,rm:102.1,quadrant:"Leading",color:"#06d6a0"},
+  {name:"XLI",rs:104.8,rm:103.5,quadrant:"Leading",color:"#06d6a0"},
+  {name:"XLF",rs:103.2,rm:101.8,quadrant:"Leading",color:"#06d6a0"},
+  {name:"XLV",rs:101.5,rm:99.2,quadrant:"Improving",color:"#00d4ff"},
+  {name:"XLU",rs:99.8,rm:98.5,quadrant:"Lagging",color:"#e63946"},
+  {name:"XLC",rs:98.5,rm:100.2,quadrant:"Weakening",color:"#f4a261"},
+  {name:"XLK",rs:97.2,rm:101.5,quadrant:"Weakening",color:"#f4a261"},
+  {name:"XLY",rs:96.8,rm:98.8,quadrant:"Lagging",color:"#e63946"},
+  {name:"XLRE",rs:98.1,rm:97.5,quadrant:"Lagging",color:"#e63946"},
+  {name:"XLB",rs:99.2,rm:99.8,quadrant:"Lagging",color:"#e63946"},
+];
+
+function initRRG() {
+  window._rrgInit = true;
+  const canvas = document.getElementById("rrgCanvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+
+  // Background quadrants
+  ctx.fillStyle = "rgba(6,214,160,0.06)";
+  ctx.fillRect(cx, 0, cx, cy);
+  ctx.fillStyle = "rgba(0,212,255,0.06)";
+  ctx.fillRect(0, 0, cx, cy);
+  ctx.fillStyle = "rgba(230,57,70,0.06)";
+  ctx.fillRect(0, cy, cx, cy);
+  ctx.fillStyle = "rgba(244,162,97,0.06)";
+  ctx.fillRect(cx, cy, cx, cy);
+
+  // Grid lines
+  ctx.strokeStyle = "#e5e7eb";
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+
+  // Labels
+  ctx.font = "bold 11px JetBrains Mono";
+  ctx.fillStyle = "rgba(5,150,105,0.5)";
+  ctx.fillText("LEADING", cx+10, 20);
+  ctx.fillStyle = "rgba(2,132,199,0.5)";
+  ctx.fillText("IMPROVING", 10, 20);
+  ctx.fillStyle = "rgba(220,38,38,0.5)";
+  ctx.fillText("LAGGING", 10, H-10);
+  ctx.fillStyle = "rgba(217,119,6,0.5)";
+  ctx.fillText("WEAKENING", cx+10, H-10);
+
+  // Axes labels
+  ctx.fillStyle = "#9ca3af";
+  ctx.font = "10px JetBrains Mono";
+  ctx.fillText("RS-Ratio", W-60, cy-8);
+  ctx.fillText("RS-Momentum", cx+5, 12);
+
+  // Scale: 95-110 -> 0-W
+  const toX = rs => ((rs - 95) / 15) * W;
+  const toY = rm => H - ((rm - 95) / 15) * H;
+
+  // Plot sectors
+  RRG_SECTORS.forEach(s => {
+    const x = toX(s.rs), y = toY(s.rm);
+    ctx.beginPath();
+    ctx.arc(x, y, 14, 0, Math.PI*2);
+    ctx.fillStyle = s.color + "33";
+    ctx.fill();
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 9px JetBrains Mono";
+    ctx.textAlign = "center";
+    ctx.fillText(s.name.replace("XL",""), x, y+3);
+    ctx.textAlign = "left";
+  });
+
+  // RRG Summary
+  const quads = {Leading:[], Improving:[], Weakening:[], Lagging:[]};
+  RRG_SECTORS.forEach(s => quads[s.quadrant].push(s.name));
+  document.getElementById("rrgSummary").innerHTML = Object.entries(quads).map(([q,arr]) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="width:80px;font-family:var(--mono);font-size:10px;color:${
+        q==="Leading"?"var(--green)":q==="Improving"?"var(--cyan)":q==="Weakening"?"var(--gold)":"var(--red)"}">${q}</span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--text)">${arr.join(", ") || "—"}</span>
+    </div>`).join("");
+}
+
+async function aiRRG() {
+  const prompt = `RRG (Relative Rotation Graph) sectors vs SPY:
+LEADING (manh + tang): XLE, XLI, XLF
+IMPROVING (yeu nhung dang tang): XLV
+WEAKENING (manh nhung dang giam): XLC, XLK
+LAGGING (yeu + giam): XLY, XLRE, XLB, XLU
+
+Tu RRG nay, sector nao nen buy? Sector nao nen tranh? Chien luoc rotation ngan han 1-3 thang? Tra loi bang tieng Viet, co ket luan ro rang.`;
+  await streamToElement("rrgAI", prompt);
+}
+
+// ============================================================
+// GEX
+// ============================================================
+const GEX_DATA = [
+  {strike:6100,put:-1.4,call:4.6},
+  {strike:6050,put:-1.7,call:3.3},
+  {strike:6000,put:-1.8,call:6.8},  // Call Wall
+  {strike:5950,put:-2.3,call:1.8},
+  {strike:5900,put:-2.7,call:5.2},
+  {strike:5850,put:-2.6,call:1.3},  // Gamma Flip
+  {strike:5800,put:-0.9,call:3.5},
+  {strike:5750,put:-2.9,call:2.1},  // Put Wall
+  {strike:5700,put:-2.6,call:2.2},
+  {strike:5650,put:-1.7,call:3.6},
+  {strike:5600,put:-1.4,call:1.2},
+];
+
+function initGEX() {
+  window._gexInit = true;
+  const container = document.getElementById("gexBars");
+  const maxVal = Math.max(...GEX_DATA.map(d => Math.max(Math.abs(d.put), d.call)));
+  const CHART_W = 280; // pixels for 100% bar
+
+  container.innerHTML = GEX_DATA.map(d => {
+    const isFlip = d.strike === 5850;
+    const isPutWall = d.strike === 5750;
+    const isCallWall = d.strike === 6000;
+    const putW = Math.round(Math.abs(d.put) / maxVal * 100);
+    const callW = Math.round(d.call / maxVal * 100);
+    return `
+    <div class="gex-strike-row" style="margin-bottom:6px">
+      <div class="gex-strike-label ${isFlip?"flip":""}" style="${isCallWall?"color:var(--cyan)":isPutWall?"color:var(--pink)":""}">${d.strike}</div>
+      <div class="gex-bars" style="position:relative">
+        <div style="display:flex;justify-content:flex-end;width:50%;padding-right:2px">
+          <div class="gex-bar-put" style="width:${putW}%;min-width:2px;opacity:${isPutWall?1:0.85}"></div>
+        </div>
+        ${isFlip?'<div class="gex-flip-line"></div>':''}
+        <div style="display:flex;width:50%;padding-left:2px">
+          <div class="gex-bar-call" style="width:${callW}%;min-width:2px;opacity:${isCallWall?1:0.85}"></div>
+        </div>
+      </div>
+      <div class="gex-values" style="color:${isFlip?"var(--gold)":isCallWall?"var(--cyan)":isPutWall?"var(--pink)":"var(--text3)"};font-weight:${isFlip||isCallWall||isPutWall?"700":"400"}">
+        ${d.put} / +${d.call}
+      </div>
+    </div>`;
+  }).join("");
+
+  // Net GEX history chart
+  const netCtx = document.getElementById("netGexChart").getContext("2d");
+  const netData = [2.1,1.8,2.4,3.1,2.8,2.2,1.6,1.9,2.5,3.2,2.9,3.5,4.1,3.8,3.2,2.8,2.4,2.1,1.8,2.3];
+  new Chart(netCtx, {
+    type: "bar",
+    data: {
+      labels: netData.map((_,i) => `-${20-i}D`),
+      datasets: [{
+        data: netData,
+        backgroundColor: netData.map(v => v > 0 ? "rgba(0,212,255,0.6)" : "rgba(230,57,70,0.6)"),
+        borderRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { ticks:{color:"#64748b",font:{size:9}}, grid:{display:false} },
+        y: { ticks:{color:"#6b7280",font:{family:"JetBrains Mono",size:9}}, grid:{color:"#e5e7eb"} }
+      }
+    }
+  });
+}
+
+function refreshGEX() {
+  document.getElementById("gexAI").innerHTML = "Refreshing GEX data...";
+  setTimeout(() => {
+    document.getElementById("gexAI").innerHTML = "GEX data updated. Chon cau hoi de nhan phan tich...";
+  }, 800);
+}
+
+async function aiGEXExplain() {
+  const prompt = `Phan tich GEX (Gamma Exposure) S&P 500 hien tai:
+- Gamma Flip: $5,850 (vung chuyen tiep chinh)
+- Call Wall: $6,000 (khang cu manh nhat - Market Maker short call)
+- Put Wall: $5,750 (san do - to chuc hedge bao ve)
+- Net GEX: Duong (+), tren Flip
+- Options: Call GEX manh nhat tai 6000 va 5900
+- Put GEX lon nhat tai 5750
+
+Giai thich: 1) Y nghia GEX doi voi bien dong gia SP500? 2) Market Maker se hanh dong the nao? 3) Trading range co the cua SP500 trong tuan nay? 4) Phan tich rui ro breakout/breakdown. Tra loi bang tieng Viet, chuyen nghiep muc CFA.`;
+  await streamToElement("gexAI", prompt);
+}
+
+async function aiGEXSetup() {
+  const prompt = `Dua vao GEX S&P 500:
+- Gamma Flip: 5850 (SP500 dang o 5870, TREN flip)
+- Call Wall: 6000 (khang cu)
+- Put Wall: 5750 (ho tro)
+- Net GEX Duong = Market Maker se SELL khi tang, BUY khi giam = dao dong thap
+
+De xuat trade setup cu the:
+1. Neu SP500 o 5870 hien tai, entry/stop/target la gi?
+2. Options strategy phu hop (iron condor? bull spread? straddle?)
+3. Strike va expiry nen dung?
+4. Risk:reward ratio?
+5. Khi nao thoat vi the?
+
+Tra loi cu the, bang tieng Viet, du lieu so lieu ro rang.`;
+  await streamToElement("gexAI", prompt);
+}
+
+async function aiPortfolioQ3() {
+  const prompt = `Dua vao du lieu thi truong hien tai:
+- Sector rotation: Energy (XLE) va Industrials (XLI) dang co inflow manh
+- Small-cap (IWM): +2.1B inflow, outperform mega-cap
+- GEX: Net duong, thi truong bien dong thap
+- RRG: XLE, XLI, XLF o vung Leading
+- VIX: 18.4 (elevated but not panic)
+- Earnings: Q2 beat rate 73%
+- Russell 2000 outperform moi khung thoi gian
+
+De xuat phan bo danh muc toi uu Q3/2026:
+- Ty le % tung sector
+- Core holding vs tactical position
+- ETF nao de choi rotation?
+- Stop loss tong danh muc
+- Strat cho truong hop VIX tang manh
+
+Tra loi bang tieng Viet, chien luoc muc CFA level.`;
+  await streamToElement("gexAI", prompt);
+}
+
+// ============================================================
+// TIN NONG
+// ============================================================
+const NEWS_DATA = [
+  {
+    id:1, cat:"MACRO", impact:"HIGH",
+    title:"Fed Chair Powell: Data supports rate cut trong Q3 2026 neu lam phat tiep tuc ha nhiet",
+    source:"Reuters", time:"2h ago",
+    summary:"Chu tich Fed Jerome Powell phat bieu tai hoi nghi Jackson Hole rang FOMC san sang cat giam lai suat neu CPI tiep tuc giam ve muc 2.5% trong 2 thang lien tiep.",
+    stocks:[
+      {t:"TLT",dir:"up",reason:"Bond prices tang khi lai suat giam"},
+      {t:"XLF",dir:"down",reason:"Bank NIM bi anh huong boi cat giam lai"},
+      {t:"XLU",dir:"up",reason:"Utility huu ich trong moi truong lai suat thap"},
+      {t:"SPY",dir:"up",reason:"Rate cut = bull signal cho thi truong"},
+    ]
+  },
+  {
+    id:2, cat:"EARNINGS", impact:"HIGH",
+    title:"NVDA Q1 FY2027 beat: EPS $0.72 vs est $0.64, data center revenue tang 122% YoY",
+    source:"Yahoo Finance", time:"3h ago",
+    summary:"NVIDIA bao cao ket qua quy 1 FY2027 vuot tro don: doanh thu trung tam du lieu dat 22.6 ty USD, tang 122% so voi cung ky nam truoc. CEO Jensen Huang xac nhan backlog Blackwell GPU van rat cao.",
+    stocks:[
+      {t:"NVDA",dir:"up",reason:"Beat manh, guidance tang"},
+      {t:"AMD",dir:"up",reason:"Rising tide lifts all boats - AI chip sector"},
+      {t:"SMCI",dir:"up",reason:"NVDA customer chinh - huong loi gian tiep"},
+      {t:"INTC",dir:"down",reason:"Thua xa trong cuoc dua AI chip"},
+    ]
+  },
+  {
+    id:3, cat:"SECTOR", impact:"MED",
+    title:"EIA: Ton kho dau thu duc My giam 4.2 trieu thung, vuot du bao -1.5M",
+    source:"MarketWatch", time:"5h ago",
+    summary:"Energy Information Administration bao cao ton kho dau thu duc My giam manh hon du kien, ho tro gia dau WTI len muc $82.3/thung. OPEC+ thong bao cat giam san xuat them 500k thung/ngay tu thang 8.",
+    stocks:[
+      {t:"XLE",dir:"up",reason:"Sector ETF tang theo gia dau"},
+      {t:"XOM",dir:"up",reason:"Revenue tang truc tiep tu gia dau cao hon"},
+      {t:"OXY",dir:"up",reason:"Gia dau cao la tich cuc cho E&P"},
+      {t:"XLY",dir:"down",reason:"Xang dat hon = consumer spending giam"},
+    ]
+  },
+  {
+    id:4, cat:"MACRO", impact:"MED",
+    title:"US Jobs Report June: +182K non-farm payrolls, that nghiep 4.1% - on consensus",
+    source:"CNBC", time:"8h ago",
+    summary:"Bao cao viec lam thang 6 cua My dung vung o muc on dinh: them 182.000 viec lam moi (du bao 180K), ty le that nghiep giu o 4.1%. Thu nhap binh quan/gio tang 3.8% YoY.",
+    stocks:[
+      {t:"SPY",dir:"up",reason:"Goldilocks report - khong qua nong hay lanh"},
+      {t:"TLT",dir:"neutral",reason:"Bond khong bien dong nhieu khi du lieu on dinh"},
+    ]
+  },
+  {
+    id:5, cat:"CRYPTO", impact:"LOW",
+    title:"Bitcoin vuot $67,000 khi ETF inflow tang manh: BlackRock IBIT thu hut $412M trong 1 ngay",
+    source:"CoinDesk", time:"12h ago",
+    summary:"Bitcoin leo len $67,200, muc cao nhat trong 3 tuan, sau khi BlackRock IBIT ETF ghi nhan dong tien vao ky luc. Tong inflow Bitcoin ETF tuan nay dat $2.1 ty USD.",
+    stocks:[
+      {t:"IBIT",dir:"up",reason:"Direct beneficiary - Bitcoin ETF"},
+      {t:"COIN",dir:"up",reason:"Crypto exchange huong loi tu volume tang"},
+      {t:"MSTR",dir:"up",reason:"MicroStrategy BTC holder lon nhat"},
+    ]
+  },
+];
+
+let currentFilter = "ALL";
+let openNews = null;
+
+function loadNews() {
+  window._newsInit = true;
+  filterNews();
+}
+
+function filterNews() {
+  currentFilter = document.getElementById("newsFilter").value;
+  const filtered = currentFilter === "ALL" ? NEWS_DATA : NEWS_DATA.filter(n => n.cat === currentFilter);
+  renderNews(filtered);
+}
+
+function renderNews(items) {
+  document.getElementById("newsContainer").innerHTML = items.map(item => `
+    <div class="news-card ${openNews === item.id ? "open" : ""}" id="news-${item.id}" onclick="toggleNews(${item.id})">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="news-cat">${item.cat}</span>
+        <span class="news-impact ${item.impact==="HIGH"?"impact-high":item.impact==="MED"?"impact-med":"impact-low"}">${item.impact} IMPACT</span>
+      </div>
+      <div class="news-title">${item.title}</div>
+      <div class="news-meta">
+        <span>${item.source}</span>
+        <span>${item.time}</span>
+        <span>${openNews === item.id ? "▲ Thu gon" : "▼ Mo rong"}</span>
+      </div>
+      <div class="expert-article ${openNews === item.id ? "open" : ""}" id="expert-${item.id}">
+        <div class="expert-section">
+          <div class="expert-section-title">📋 TOM TAT SU KIEN</div>
+          <div class="expert-section-body">${item.summary}</div>
+        </div>
+        <div class="expert-section">
+          <div class="expert-section-title">📊 CO PHIEU BI ANH HUONG</div>
+          ${item.stocks.map(s => `
+            <div class="stock-impact-row">
+              <div class="si-ticker">${s.t}</div>
+              <div class="si-dir ${s.dir === "up" ? "up" : s.dir === "down" ? "down" : ""}">${s.dir === "up" ? "▲ TANG" : s.dir === "down" ? "▼ GIAM" : "- TRUNG TINH"}</div>
+              <div class="si-reason">${s.reason}</div>
+            </div>`).join("")}
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn btn-ai" onclick="aiNewsDeep(${item.id}, event)" style="width:100%">🤖 Phan tich sau bang Claude AI</button>
+          <div class="ai-response" id="news-ai-${item.id}" style="margin-top:10px;display:none"></div>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+function toggleNews(id) {
+  openNews = openNews === id ? null : id;
+  filterNews();
+  if (openNews) {
+    setTimeout(() => {
+      const el = document.getElementById("news-" + id);
+      if (el) el.scrollIntoView({behavior:"smooth", block:"nearest"});
+    }, 100);
+  }
+}
+
+async function aiNewsDeep(id, e) {
+  e.stopPropagation();
+  const item = NEWS_DATA.find(n => n.id === id);
+  const aiEl = document.getElementById("news-ai-" + id);
+  aiEl.style.display = "block";
+  aiEl.classList.add("loading");
+  aiEl.innerHTML = '<span class="thinking">Claude dang phan tich...</span>';
+
+  const prompt = `Tin tuc: "${item.title}"
+
+Tom tat: ${item.summary}
+
+Viet phan tich chuyen sau muc CFA/CFP:
+1. TAC DONG MARKET (ngan han 1-5 ngay, dai han 1-3 thang)
+2. SECTOR BI ANH HUONG (cu the hon tin da neu)
+3. CHIEN LUOC TRADE (entry, stop, target)
+4. RUI RO CAN BIET
+5. KET LUAN
+
+Tra loi bang tieng Viet, ngan gon nhung du su kien.`;
+
+  const result = await callClaude(prompt);
+  aiEl.classList.remove("loading");
+  aiEl.innerHTML = result.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/## (.*)/g, '<h3 style="color:var(--gold);font-family:var(--mono);font-size:12px;margin:10px 0 4px">$1</h3>');
+}
+
+// ============================================================
+// RESEARCH
+// ============================================================
+const PRESETS = {
+  macro: "Phan tich toan dien thi truong My Q3/2026: Fed policy, inflation outlook, GDP growth, rui ro geo-political. Du bao xu huong chinh va cac scenario co the xay ra.",
+  rotation: "Sector rotation hien tai dang o giai doan nao cua chu ky kinh te? Energy, Industrials, Financials dang leading. Tech dang weakening. IWM outperform QQQ. Phan tich sau va du bao 3-6 thang toi.",
+  microcap: "Tim 5 co phieu micro-cap My tiem nang nhat hien nay. Tieu chi: market cap < $500M, revenue growth > 30%, RS rating > 85, catalyst ro rang. Phan tich co ban va ky thuat.",
+  gex_strategy: "Dua vao GEX SP500 hien tai (Flip 5850, Call Wall 6000, Put Wall 5750, Net GEX duong), xay dung chien luoc trading toan dien cho ca swing trader va options trader trong thang 7/2026.",
+  portfolio: "Phan tich va toi uu danh muc dau tu cho Q3/2026. Boi canh: rotation Energy/Industrial, IWM outperform, rate cut ky vong, GEX duong. De xuat allocation, rebalancing strategy, risk management."
+};
+
+function setResearchPreset(key) {
+  document.getElementById("researchInput").value = PRESETS[key];
+}
+
+async function runResearch() {
+  const query = document.getElementById("researchInput").value.trim();
+  if (!query) return;
+  const resultEl = document.getElementById("researchResult");
+  resultEl.innerHTML = '<div class="thinking" style="text-align:center;padding:40px">Claude dang nghien cuu sau...</div>';
+
+  const systemPrompt = `Ban la chuyen gia phan tich thi truong chung khoan My cap CFA Level 3 va CFP. Chuyen sau ve: sector rotation, options flow (GEX), market breadth, macro analysis, va co phieu micro-cap. 
+Tra loi bang tieng Viet, chuyen nghiep, co cau truc ro rang voi headers, bullet points. 
+Luon co: 1) Phan tich hien tai, 2) Du bao/kich ban, 3) Chien luoc cu the, 4) Risk management.`;
+
+  const result = await callClaude(query, systemPrompt);
+  resultEl.innerHTML = result
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/## (.*)/g, '<h3>$1</h3>')
+    .replace(/### (.*)/g, '<h3>$1</h3>')
+    .replace(/\n/g, "<br>")
+    .replace(/- (.*?)(<br>|$)/g, "<li>$1</li>")
+    .replace(/(<li>.*?<\/li>)+/g, (m) => `<ul>${m}</ul>`);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = () => {
+  initCashflow();
+};
+</script>
+</body>
+</html>
